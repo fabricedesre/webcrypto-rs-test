@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebCrypto, meet Rust</title>
+    <script>
+        let wcrypto = window.crypto.subtle;
+
+        function sign_message(pair, msg) {
+            let data = msg;
+            if (typeof msg == "string") {
+                let encoder = new TextEncoder();
+                data = encoder.encode(msg);
+            }
+
+            return wcrypto.sign(
+                {
+                    name: "ECDSA",
+                    hash: { name: "SHA-256" },
+                },
+                pair.privateKey,
+                data
+            );
+        }
+
+        function export_pubkey(pair) {
+            return wcrypto.exportKey(
+                "jwk",
+                pair.publicKey
+            );
+        }
+
+        // res[0] is the pub key
+        // res[1] is the signature
+        function gen_rust(res) {
+            console.log(res[0]);
+            let output = document.getElementById("output");
+            output.textContent = `let public_key = "${res[0].x}${res[0].y}";\n`;
+            output.textContent += `let signature = [${new Uint8Array(res[1])}];\n\n`;
+        }
+
+        function start() {
+            wcrypto.generateKey(
+                {
+                    name: "ECDSA",
+                    namedCurve: "P-256",
+                },
+                true,
+                ["sign", "verify"]).then(pair => {
+                    return Promise.all([export_pubkey(pair), sign_message(pair, "bob@example.com")])
+                }).then(res => gen_rust(res), console.error);
+        }
+    </script>
+</head>
+
+<body onload="start()">
+    <pre id="output"></pre>
+</body>
+
+</html>

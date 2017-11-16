@@ -1,0 +1,9 @@
+[package]
+name = "webcrypto-rs"
+version = "0.1.0"
+authors = ["Fabrice Desré <fabrice@desre.org>"]
+
+[dependencies]
+base64 = "0.7"
+ring = "0.12"
+untrusted = "0.5"
